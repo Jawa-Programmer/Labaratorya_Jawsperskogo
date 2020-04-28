@@ -17,6 +17,9 @@ struct Node {
 	uint8_t black, red;
 	int black_height = 1;
 	Node* parent, * left, * right;
+	Node* rotate_left();
+	Node* rotate_right();
+	Node* getRoot();
 	Node(int k, const char* inf) {
 		key = k;
 		info = inf;

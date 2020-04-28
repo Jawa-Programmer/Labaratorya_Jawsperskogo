@@ -1,6 +1,6 @@
 #include "LLRBTree.h"
 
-LLRB_ERRORS LLRBTree::add(int key,const char* info)
+LLRB_ERRORS LLRBTree::add(int key, const char* info)
 {
 	if (root == nullptr)
 	{
@@ -38,4 +38,46 @@ Node* LLRBTree::getPrevEl(int key)
 		else break;
 	}
 	return prev;
+}
+
+Node* Node::rotate_left()
+{
+	struct Node* pivot = this->right;
+
+	pivot->parent = this->parent; /* при этом, возможно, pivot становится корнем дерева */
+	if (this->parent != NULL) {
+		if (this->parent->left == this)
+			this->parent->left = pivot;
+		else
+			this->parent->right = pivot;
+	}
+
+	this->right = pivot->left;
+	if (pivot->left != NULL)
+		pivot->left->parent = this;
+
+	this->parent = pivot;
+	pivot->left = this;
+	return this->getRoot();
+}
+
+Node* Node::rotate_right()
+{
+	struct Node* pivot = this->left;
+
+	pivot->parent = this->parent; /* при этом, возможно, pivot становится корнем дерева */
+	if (this->parent != NULL) {
+		if (this->parent->left == this)
+			this->parent->left = pivot;
+		else
+			this->parent->right = pivot;
+	}
+
+	this->left = pivot->right;
+	if (pivot->right != NULL)
+		pivot->right->parent = this;
+
+	this->parent = pivot;
+	pivot->right = this;
+	return this->getRoot();
 }
