@@ -23,7 +23,20 @@ template <typename T> void safeGet(T& variable)
 
 int main()
 {
-    std::cout << "Hello World!\n";
+	system("color 1E");
 	LLRBTree tree;
 	LLRB_ERRORS error = tree.add(11, "LOL");
+	error = tree.add(13, "KEK");
+	error = tree.add(10, "PEK");
+	error = tree.add(12, "POOP");
+	error = tree.add(14, "FOO");
+	error = tree.add(15, "FOO2");
+	error = tree.add(5, "FOO3");
+	error = tree.add(16, "FOO4");
+	error = tree.add(9, "FOO5");
+	cout << (error == LLRB_KEY_IS_TAKEN) << endl;
+	error = tree.printAsTable();
+	const char* fnd;
+	error = tree.find(0, &fnd);
+	if (error == LLRB_NO_ERROR)cout << fnd << endl;
 }

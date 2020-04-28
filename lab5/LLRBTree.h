@@ -4,28 +4,24 @@
 
 #include <stdint.h>
 
-enum LLRB_ERRORS
-{
-	NO_ERROR, KEY_IS_TAKEN, NO_KEY
-};
+enum LLRB_ERRORS { LLRB_NO_ERROR, LLRB_KEY_IS_TAKEN, LLRB_NO_KEY };
+enum Color { BLACK, RED };
 /// <summary>
 /// Узел дерева. Хранит ключ, значение и служебную информацию (цвета, родителя, потомков)
 /// </summary>
 struct Node {
 	int key;
 	const char* info;
-	uint8_t black, red;
-	int black_height = 1;
+	Color color;
 	Node* parent, * left, * right;
-	Node* rotate_left();
-	Node* rotate_right();
+	void rotate_left();
+	void rotate_right();
+	void print();
 	Node* getRoot();
 	Node(int k, const char* inf) {
 		key = k;
 		info = inf;
-		red = 1;
-		black = 0;
-		black_height = 1;
+		color = RED;
 		left = nullptr;
 		right = nullptr;
 		parent = nullptr;
@@ -61,14 +57,18 @@ public:
 	/// </returns>
 	LLRB_ERRORS add(int, const char*);
 	LLRB_ERRORS remove(int);
-	LLRB_ERRORS find(int, char*&);
+	LLRB_ERRORS find(int,const char**);
 	LLRB_ERRORS printAsTable();
 	LLRB_ERRORS printAsTree();
-	int getMax();
 private:
 	Node* root;
 	Node* getPrevEl(int);
-
+	Node* insert(int, const char*);
+	void correct_case1(Node* n);
+	void correct_case2(Node* n);
+	void correct_case3(Node* n);
+	void correct_case4(Node* n);
+	void correct_case5(Node* n);
 };
 #endif 
 
