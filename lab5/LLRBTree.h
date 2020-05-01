@@ -4,7 +4,7 @@
 
 #include <stdint.h>
 
-enum LLRB_ERRORS { LLRB_NO_ERROR, LLRB_KEY_IS_TAKEN, LLRB_NO_KEY };
+enum LLRB_ERRORS { LLRB_NO_ERROR, LLRB_KEY_IS_TAKEN, LLRB_NO_KEY, LLRB_NO_OPERATIONS };
 enum Color { BLACK, RED };
 /// <summary>
 /// Узел дерева. Хранит ключ, значение и служебную информацию (цвета, родителя, потомков)
@@ -73,9 +73,13 @@ public:
 	/// </returns>
 	LLRB_ERRORS add(int, const char*);
 	LLRB_ERRORS remove(int);
-	LLRB_ERRORS find(int, const char**);
+	LLRB_ERRORS find(int,  char**);
 	LLRB_ERRORS printAsTable();
 	LLRB_ERRORS printAsTree();
+	~LLRBTree()
+	{
+		while (root) remove(root->key);
+	}
 private:
 	Node* root;
 	Node* getPrevEl(int);

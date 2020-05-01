@@ -6,20 +6,24 @@ LLRBTree::LLRBTree()
 	root = nullptr;
 }
 
-LLRB_ERRORS LLRBTree::find(int key, const char** data)
+LLRB_ERRORS LLRBTree::find(int key, char** data)
 {
 	Node* prev = getPrevEl(key);
 	if (prev->key == key) {
-		(*data) = prev->info;
+		strcpy_s(*data, sizeof(char) * 20, prev->info);
 		return LLRB_NO_ERROR;
 	}
-
 	return LLRB_NO_KEY;
 }
 
 LLRB_ERRORS LLRBTree::printAsTable()
 {
 	if (root)root->print();
+	return LLRB_NO_ERROR;
+}
+LLRB_ERRORS LLRBTree::printAsTree()
+{
+	std::cout << "This function is not avaible\n";
 	return LLRB_NO_ERROR;
 }
 LLRB_ERRORS LLRBTree::add(int k, const char* d)
@@ -37,7 +41,7 @@ LLRB_ERRORS LLRBTree::remove(int key)
 	Node* todel = getPrevEl(key);
 	if (todel->key != key)return LLRB_NO_KEY;
 
-	//delete[] todel->info;
+	delete[] todel->info;
 	todel->info = nullptr;
 	Node* next = todel->getNext();
 	if (next != todel)
@@ -311,10 +315,10 @@ void Node::rotate_right()
 void Node::print()
 {
 	if (left != nullptr)left->print();
-	std::cout << key << " : " << info << (color == RED ? " (R)" : " (B)");
+	std::cout << key << " : " << info << ".\tdebug info: color = " << (color == RED ? " Red" : " Black");
 	if (parent)
-		std::cout << " parent: " << parent->key;
-	else std::cout << "parent: NULL";
+		std::cout << ". parent: " << parent->key;
+	else std::cout << ". parent: NULL";
 	std::cout << '\n';
 	if (right != nullptr)right->print();
 }
