@@ -34,9 +34,7 @@ int main()
 	error = tree.add(5, "FOO3");
 	error = tree.add(16, "FOO4");
 	error = tree.add(9, "FOO5");
-	cout << (error == LLRB_KEY_IS_TAKEN) << endl;
+	error = tree.remove(13);
+	error = tree.remove(11);
 	error = tree.printAsTable();
-	const char* fnd;
-	error = tree.find(0, &fnd);
-	if (error == LLRB_NO_ERROR)cout << fnd << endl;
 }

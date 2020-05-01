@@ -32,6 +32,54 @@ LLRB_ERRORS LLRBTree::add(int k, const char* d)
 	}
 	return LLRB_KEY_IS_TAKEN;
 }
+LLRB_ERRORS LLRBTree::remove(int key)
+{
+	Node* todel = getPrevEl(key);
+	if (todel->key != key)return LLRB_NO_KEY;
+
+	//delete[] todel->info;
+	todel->info = nullptr;
+	Node* next = todel->getNext();
+	if (next != todel)
+	{
+		todel->info = next->info;
+		todel->key = next->key;
+	}
+	todel = next;
+	if (todel == root)
+	{
+		delete todel;
+		root = nullptr;
+		return LLRB_NO_ERROR;
+	}
+	Node* N = nullptr;
+	if (todel->left)
+	{
+		N = todel->left;
+		N->parent = todel->parent;
+		if (todel->parent)	todel->parent->right = N;
+		else root = N;
+	}
+	else if (todel->right)
+	{
+		N = todel->right;
+		N->parent = todel->parent;
+		if (todel->parent) todel->parent->left = N;
+		else root = N;
+	}
+	else
+	{
+		if (todel->parent)
+		{
+			if (todel->parent->left == todel) todel->parent->left = nullptr;
+			else todel->parent->right = nullptr;
+		}
+	}
+	delete todel;
+	delete_case1(N);
+
+	return LLRB_NO_ERROR;
+}
 Node* LLRBTree::insert(int key, const char* info)
 {
 	if (root == nullptr)
@@ -135,6 +183,91 @@ void LLRBTree::correct_case5(Node* n)
 	}
 }
 
+void LLRBTree::delete_case1(Node* n)
+{
+	if (n && n->parent)delete_case2(n);
+}
+
+void LLRBTree::delete_case2(Node* n)
+{
+	Node* s = n->getBro();
+	if (s->color == RED) {
+		n->parent->color = RED;
+		s->color = BLACK;
+		if (n == n->parent->left)
+			n->parent->rotate_left();
+		else
+			n->parent->rotate_right();
+	}
+	delete_case3(n);
+}
+
+void LLRBTree::delete_case3(Node* n)
+{
+	Node* s = n->getBro();
+
+	if ((n->parent->color == BLACK) &&
+		(s->color == BLACK) &&
+		(s->left->color == BLACK) &&
+		(s->right->color == BLACK)) {
+		s->color = RED;
+		delete_case1(n->parent);
+	}
+	else
+		delete_case4(n);
+}
+void LLRBTree::delete_case4(Node* n)
+{
+	Node* s = n->getBro();
+
+	if ((n->parent->color == RED) &&
+		(s->color == BLACK) &&
+		(s->left->color == BLACK) &&
+		(s->right->color == BLACK)) {
+		s->color = RED;
+		n->parent->color = BLACK;
+	}
+	else
+		delete_case5(n);
+}
+void LLRBTree::delete_case5(Node* n)
+{
+	Node* s = n->getBro();
+
+	if (s->color == BLACK) {
+		if ((n == n->parent->left) &&
+			(s->right->color == BLACK) &&
+			(s->left->color == RED)) {
+			s->color = RED;
+			s->left->color = BLACK;
+			s->rotate_right();
+		}
+		else if ((n == n->parent->right) &&
+			(s->left->color == BLACK) &&
+			(s->right->color == RED)) {
+			s->color = RED;
+			s->right->color = BLACK;
+			s->rotate_left();
+		}
+	}
+	delete_case6(n);
+}
+void LLRBTree::delete_case6(Node* n)
+{
+	Node* s = n->getBro();
+
+	s->color = n->parent->color;
+	n->parent->color = BLACK;
+
+	if (n == n->parent->left) {
+		s->right->color = BLACK;
+		n->parent->rotate_left();
+	}
+	else {
+		s->left->color = BLACK;
+		n->parent->rotate_right();
+	}
+}
 void Node::rotate_left()
 {
 	struct Node* pivot = this->right;

@@ -37,6 +37,22 @@ struct Node {
 			return gp->left == parent ? gp->right : gp->left;
 		return nullptr;
 	}
+
+	inline Node* getBro()
+	{
+		return (parent->left == this) ? parent->right : parent->left;
+	}
+
+	inline Node* getNext()
+	{
+		if (right == nullptr)return this;
+		Node* nxt = right;
+		while (nxt->left)
+		{
+			nxt = nxt->left;
+		}
+		return nxt;
+	}
 };
 
 /// <summary>
@@ -57,7 +73,7 @@ public:
 	/// </returns>
 	LLRB_ERRORS add(int, const char*);
 	LLRB_ERRORS remove(int);
-	LLRB_ERRORS find(int,const char**);
+	LLRB_ERRORS find(int, const char**);
 	LLRB_ERRORS printAsTable();
 	LLRB_ERRORS printAsTree();
 private:
@@ -69,6 +85,13 @@ private:
 	void correct_case3(Node* n);
 	void correct_case4(Node* n);
 	void correct_case5(Node* n);
+
+	void delete_case1(Node* n);
+	void delete_case2(Node* n);
+	void delete_case3(Node* n);
+	void delete_case4(Node* n);
+	void delete_case5(Node* n);
+	void delete_case6(Node* n);
 };
 #endif 
 
