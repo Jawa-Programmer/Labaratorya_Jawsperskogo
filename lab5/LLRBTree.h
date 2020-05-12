@@ -3,8 +3,9 @@
 #define LLRBTree_h
 
 #include <stdint.h>
+#include <fstream>
 
-enum LLRB_ERRORS { LLRB_NO_ERROR, LLRB_KEY_IS_TAKEN, LLRB_NO_KEY, LLRB_NO_OPERATIONS };
+enum LLRB_ERRORS { LLRB_NO_ERROR, LLRB_KEY_IS_TAKEN, LLRB_NO_KEY, LLRB_NO_OPERATIONS, LLRB_INCORRECT_FILEPATH };
 enum Color { BLACK, RED };
 /// <summary>
 /// Узел дерева. Хранит ключ, значение и служебную информацию (цвета, родителя, потомков)
@@ -16,7 +17,8 @@ struct Node {
 	Node* parent, * left, * right;
 	void rotate_left();
 	void rotate_right();
-	void print();
+	void print(std::ofstream*);
+	void clear();
 	Node* getRoot();
 	Node(int k, const char* inf) {
 		key = k;
@@ -73,12 +75,15 @@ public:
 	/// </returns>
 	LLRB_ERRORS add(int, const char*);
 	LLRB_ERRORS remove(int);
-	LLRB_ERRORS find(int,  char**);
+	LLRB_ERRORS find(int, char**);
 	LLRB_ERRORS printAsTable();
 	LLRB_ERRORS printAsTree();
+	LLRB_ERRORS readFromFile(const char*);
 	~LLRBTree()
 	{
-		while (root) remove(root->key);
+		if (root)
+			root->clear();
+		root = nullptr;
 	}
 private:
 	Node* root;
@@ -96,6 +101,9 @@ private:
 	void delete_case4(Node* n);
 	void delete_case5(Node* n);
 	void delete_case6(Node* n);
+	std::ofstream fout;
+
+	void PrintTree(Node* q, long n);
 };
 #endif 
 

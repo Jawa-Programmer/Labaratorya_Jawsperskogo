@@ -20,18 +20,24 @@ template <typename T> void safeGet(T& variable)
 	}
 	return;
 }
-
+/*
 int main()
 {
 	system("color 1E");
 	system("mode con cols=160 lines=30");
 	LLRBTree tree;
+	if (tree.readFromFile("debug.txt") == LLRB_INCORRECT_FILEPATH) {
+		cout << "debug file not founded" << endl << "press any key to continue" << endl; _getch();
+	}
 	while (true)
 	{
 		LLRB_ERRORS status = LLRB_NO_OPERATIONS;
 		system("cls");
 		cout << "Contro: a - add new element, r - remove element by key, f - search element by key, Esc - exit" << endl;
+		tree.printAsTree();
+		cout << "---------------------------------------------------------------------------------------------" << endl;
 		tree.printAsTable();
+		cout << "Contro: a - add new element, r - remove element by key, f - search element by key, Esc - exit" << endl;
 		char key = _getch();
 		switch (key)
 		{
@@ -101,5 +107,92 @@ int main()
 		_getch();
 	}
 end:
+	return 0;
+}
+*/
+
+#include <random>
+#include <ctime>
+#include <math.h>
+#include <windows.h>
+
+void gotoxy(int column, int line)
+{
+	COORD coord;
+	coord.X = column;
+	coord.Y = line;
+	SetConsoleCursorPosition(
+		GetStdHandle(STD_OUTPUT_HANDLE),
+		coord
+	);
+}
+
+
+
+struct sample
+{
+	int totalEl, totalFin;
+	long totalSearchTime;
+};
+int main()
+{
+	system("color 1E");
+	system("mode con cols=170 lines=40");
+	std::random_device rd;
+	std::mt19937 mersenne(rd());
+	sample arr[200] = {};
+	int N = 0;
+	for (int i = 1; i < 200; i++) {
+		N += 10000;
+		LLRBTree tree;
+
+		int cnt = 0;
+		cout << "started creation of random tree " << N << endl;
+		for (int count = 0; count < N; ++count)
+		{
+			if ((tree.add((mersenne() % N), "lol")) == LLRB_NO_ERROR) cnt++;
+
+		}
+		/*cout << "printing tree to file, state 1/2" << endl;
+		tree.printAsTree();
+		cout << "printing tree to file, state 2/2" << endl;
+
+		//cout << "Skiped" << endl;
+		tree.printAsTable();*/
+
+		cout << "timing " << endl;
+
+		int finded = 0;
+		char* tmp = new char[20];
+
+
+		long starttime = clock();
+		for (int count = 0; count < N; ++count)
+		{
+			if (tree.find((mersenne() % N), &tmp) == LLRB_NO_ERROR)finded++;
+		}
+		long dt = clock() - starttime;
+		dt *= 1000;
+
+		cout << "Total elements: " << cnt << endl;
+		cout << "Total finded elements: " << finded << endl;
+		cout << "Total search time: " << dt << endl;
+		cout << "Avage search time: " << (float)dt / cnt << endl;
+		cout << "lb(count): " << log2(cnt) << endl;
+		arr[i - 1].totalEl = cnt;
+		arr[i - 1].totalFin = finded;
+		arr[i - 1].totalSearchTime = dt;
+		delete[] tmp;
+	}
+	system("cls");
+	for (int i = 0; i < 200; i++)
+	{
+		int x = (int)(arr[i].totalEl * 160.0 / 2000000.0);
+		int y = 30 - (int)(arr[i].totalSearchTime*20 / arr[i].totalEl);
+
+		gotoxy(x, y);
+		cout << '*';
+	}
+	_getch();
 	return 0;
 }

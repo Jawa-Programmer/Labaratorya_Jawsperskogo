@@ -1,5 +1,6 @@
 #include "LLRBTree.h"
 #include <iostream>
+#include <fstream>
 
 LLRBTree::LLRBTree()
 {
@@ -18,12 +19,32 @@ LLRB_ERRORS LLRBTree::find(int key, char** data)
 
 LLRB_ERRORS LLRBTree::printAsTable()
 {
-	if (root)root->print();
+	fout.open("tableout.txt");
+	if (root)root->print(&fout);
+	fout.close();
 	return LLRB_NO_ERROR;
 }
 LLRB_ERRORS LLRBTree::printAsTree()
 {
-	std::cout << "This function is not avaible\n";
+	fout.open("treeout.txt");
+	PrintTree(root, 0);
+	fout.close();
+	return LLRB_NO_ERROR;
+}
+LLRB_ERRORS LLRBTree::readFromFile(const char* filepath)
+{
+	if (root)
+		root->clear();
+	root = nullptr;
+	std::ifstream fin(filepath);
+	if (!fin)return LLRB_INCORRECT_FILEPATH;
+	while (!fin.eof())
+	{
+		int key; char* data = new char[20];
+		fin >> key >> data;
+		add(key, data);
+	}
+
 	return LLRB_NO_ERROR;
 }
 LLRB_ERRORS LLRBTree::add(int k, const char* d)
@@ -272,12 +293,39 @@ void LLRBTree::delete_case6(Node* n)
 		n->parent->rotate_right();
 	}
 }
+void LLRBTree::PrintTree(Node* q, long n)
+{
+	if (q)
+	{
+		PrintTree(q->right, n + 5);
+		for (int i = 0; i < n - 5; i++)
+			if (i % 5 == 0) {
+				//		std::cout << "|";
+				fout << "|";
+			}
+			else {
+				//		std::cout << " ";
+				fout << " ";
+			}
+		int a = n - 4;
+		if (a < 0)a = 0;
+		//	std::cout << "|";
+		fout << "|";
+		for (int i = a; i < n; i++) {
+			//		std::cout << "-";
+			fout << "-";
+		}
+		//	std::cout << q->key /*<< " " << q->info*/ << std::endl;
+		fout << q->key << " " << (q->color == RED ? "R" : "B") /*<< " " << q->info*/ << std::endl;
+		PrintTree(q->left, n + 5);
+	}
+}
 void Node::rotate_left()
 {
 	struct Node* pivot = this->right;
 
-	pivot->parent = this->parent; /* при этом, возможно, pivot становится корнем дерева */
-	if (this->parent != NULL) {
+	pivot->parent = this->parent;
+	if (this->parent != nullptr) {
 		if (this->parent->left == this)
 			this->parent->left = pivot;
 		else
@@ -285,7 +333,7 @@ void Node::rotate_left()
 	}
 
 	this->right = pivot->left;
-	if (pivot->left != NULL)
+	if (pivot->left != nullptr)
 		pivot->left->parent = this;
 
 	this->parent = pivot;
@@ -296,8 +344,8 @@ void Node::rotate_right()
 {
 	struct Node* pivot = this->left;
 
-	pivot->parent = this->parent; /* при этом, возможно, pivot становится корнем дерева */
-	if (this->parent != NULL) {
+	pivot->parent = this->parent;
+	if (this->parent != nullptr) {
 		if (this->parent->left == this)
 			this->parent->left = pivot;
 		else
@@ -305,22 +353,39 @@ void Node::rotate_right()
 	}
 
 	this->left = pivot->right;
-	if (pivot->right != NULL)
+	if (pivot->right != nullptr)
 		pivot->right->parent = this;
 
 	this->parent = pivot;
 	pivot->right = this;
 }
 
-void Node::print()
+void Node::print(std::ofstream* fout)
 {
-	if (left != nullptr)left->print();
-	std::cout << key << " : " << info << ".\tdebug info: color = " << (color == RED ? " Red" : " Black");
-	if (parent)
-		std::cout << ". parent: " << parent->key;
-	else std::cout << ". parent: NULL";
-	std::cout << '\n';
-	if (right != nullptr)right->print();
+	if (left != nullptr)left->print(fout);
+	//	std::cout << key << " : " << info << ".\tdebug info: color = " << (color == RED ? " Red" : " Black");
+	(*fout) << key << " : " << info << ".\tdebug info: color = " << (color == RED ? " Red" : " Black");
+	if (parent) {
+		//std::cout << ". parent: " << parent->key;
+		(*fout) << ". parent: " << parent->key;
+	}
+	else {
+		//	std::cout << ". parent: NULL"; 
+		*fout << ". parent: NULL";
+	}
+	//	std::cout << '\n';
+	*fout << '\n';
+	if (right != nullptr)right->print(fout);
+}
+
+void Node::clear()
+{
+	if (left)left->clear();
+	if (right)right->clear();
+	left = nullptr;
+	right = nullptr;
+	//delete[] info;
+	delete this;
 }
 
 Node* Node::getRoot()
