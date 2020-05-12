@@ -140,10 +140,10 @@ int main()
 	system("mode con cols=170 lines=40");
 	std::random_device rd;
 	std::mt19937 mersenne(rd());
-	sample arr[200] = {};
+	sample arr[100] = {};
 	int N = 0;
-	for (int i = 1; i < 200; i++) {
-		N += 10000;
+	for (int i = 1; i <= 100; i++) {
+		N += 20000;
 		LLRBTree tree;
 
 		int cnt = 0;
@@ -185,7 +185,7 @@ int main()
 		delete[] tmp;
 	}
 	system("cls");
-	for (int i = 0; i < 200; i++)
+	for (int i = 0; i < 100; i++)
 	{
 		int x = (int)(arr[i].totalEl * 160.0 / 2000000.0);
 		int y = 30 - (int)(arr[i].totalSearchTime*20 / arr[i].totalEl);
