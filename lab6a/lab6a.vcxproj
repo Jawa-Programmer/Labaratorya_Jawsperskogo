@@ -20,9 +20,9 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
-    <ProjectGuid>{90469F04-6164-417A-826C-A717E08869AE}</ProjectGuid>
+    <ProjectGuid>{BB39B908-86C4-4ADB-8017-EA8826CECABF}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>lab6</RootNamespace>
+    <RootNamespace>lab6a</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -151,7 +151,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="lab6.cpp" />
+    <ClCompile Include="lab6a.cpp" />
     <ClCompile Include="MyGraph.cpp" />
   </ItemGroup>
   <ItemGroup>
