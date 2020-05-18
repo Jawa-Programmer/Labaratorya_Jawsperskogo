@@ -1,4 +1,5 @@
 #include "MyGraph.h"
+#include <fstream>
 #include <iostream>
 
 
@@ -113,13 +114,17 @@ void MyGraphNode::removeIncident(MyGraphNode* toRemove)
 	toRemove->removeIncoming(this);
 }
 
-void MyGraphNode::clearArcs()
+void MyGraph::clearArcs(MyGraphNode* node, bool WF)
 {
-	while (incoming)
+	while (node->incoming)
 	{
-		incoming->info->removeIncident(this);
+		if (WF)clearArc(node->incoming->info->x, node->incoming->info->y, node->x, node->y);
+		node->incoming->info->removeIncident(node);
 	}
-	while (incidents)removeIncident(incidents->info);
+	while (node->incidents) {
+		if (WF)clearArc(node->x, node->y, node->incidents->info->x, node->incidents->info->y);
+		node->removeIncident(node->incidents->info);
+	}
 }
 
 void MyGraphNode::addIncoming(MyGraphNode* toAdd)
@@ -152,6 +157,35 @@ bool MyGraphNode::operator==(MyGraphNode b)
 	return x == b.x && y == b.y;
 }
 
+MyGraph::MyGraph(const char* filepath)
+{
+	filename = filepath;
+	std::ifstream in(filepath);
+	if (in.is_open()) {
+		while (!in.eof()) {
+			bool correct = false;
+			int x1 = -1, y1 = -1, x2 = -1, y2 = -1;
+			in.read((char*)&correct, sizeof(correct));
+			in.read((char*)&x1, sizeof(x1));
+			in.read((char*)&y1, sizeof(y1));
+			in.read((char*)&x2, sizeof(x2));
+			in.read((char*)&y2, sizeof(y1));
+			if (correct)
+			{
+				addNode(x1, y1);
+				addNode(x2, y2);
+				addArc(x1, y1, x2, y2);
+			}
+		}
+		in.close();
+	}
+	else
+	{
+		std::ofstream out(filepath, std::ios::app);
+		out.close();
+	}
+}
+
 MyGraph::~MyGraph()
 {
 	nodes->clear();
@@ -159,7 +193,7 @@ MyGraph::~MyGraph()
 	nodes = nullptr;
 }
 
-MyGraphErrors MyGraph::addNode(int x, int y)
+MyGraphErrors MyGraph::addNode(int x, int y, bool WF)
 {
 	if (nodes) {
 		if (nodes->find(x, y))return MG_COORDS_BUSY;
@@ -177,13 +211,13 @@ MyGraphErrors MyGraph::addNode(int x, int y)
 	return MG_NO_ERROR;
 }
 
-MyGraphErrors MyGraph::removeNode(int x, int y)
+MyGraphErrors MyGraph::removeNode(int x, int y, bool WF)
 {
 	if (nodes) {
 		if (nodes->info->x == x && nodes->info->y == y)
 		{
 			MyNodesList* tmp = nodes->next;
-			nodes->info->clearArcs();
+			clearArcs(nodes->info, WF);
 			delete nodes;
 			nodes = tmp;
 			return MG_NO_ERROR;
@@ -193,7 +227,7 @@ MyGraphErrors MyGraph::removeNode(int x, int y)
 			MyGraphNode* toDel = nodes->find(x, y);
 			if (toDel)
 			{
-				toDel->clearArcs();
+				clearArcs(toDel, WF);
 				return nodes->remove(toDel);
 			}
 		}
@@ -201,23 +235,25 @@ MyGraphErrors MyGraph::removeNode(int x, int y)
 	return MG_COORDS_NOT_FOUNDED;
 }
 
-MyGraphErrors MyGraph::addArc(int x1, int y1, int x2, int y2)
+MyGraphErrors MyGraph::addArc(int x1, int y1, int x2, int y2, bool WF)
 {
 	MyGraphNode* n1 = nodes->find(x1, y1);
 	MyGraphNode* n2 = nodes->find(x2, y2);
 	if (n1 && n2) {
 		n1->addIncident(n2);
+		if (WF)wrirteArc(x1, y1, x2, y2);
 		return MG_NO_ERROR;
 	}
 	return MG_COORDS_NOT_FOUNDED;
 }
 
-MyGraphErrors MyGraph::removeArc(int x1, int y1, int x2, int y2)
+MyGraphErrors MyGraph::removeArc(int x1, int y1, int x2, int y2, bool WF)
 {
 	MyGraphNode* n1 = nodes->find(x1, y1);
 	MyGraphNode* n2 = nodes->find(x2, y2);
 	if (n1 && n2) {
 		n1->removeIncident(n2);
+		if (WF)clearArc(x1, y1, x2, y2);
 		return MG_NO_ERROR;
 	}
 	return MG_COORDS_NOT_FOUNDED;
@@ -334,7 +370,7 @@ MyNodesList* MyGraph::sort(MyNodesList* mndl)
 		tmp = mndl;
 		while (tmp)
 		{
-			if (tmp->info->N < prevMax && tmp->info->N > max ) { max = tmp->info->N; minG = tmp->info; }
+			if (tmp->info->N < prevMax && tmp->info->N > max) { max = tmp->info->N; minG = tmp->info; }
 			tmp = tmp->next;
 		}
 		if (max == -1)break;
@@ -343,6 +379,50 @@ MyNodesList* MyGraph::sort(MyNodesList* mndl)
 		unsEnd->info = minG;
 	}
 	return uns;
+}
+
+void MyGraph::wrirteArc(int x1, int y1, int x2, int y2)
+{
+	std::ofstream out(filename, std::ios::app);
+	if (out.is_open())
+	{
+		bool correct = true;
+		out.write((char*)&correct, sizeof(bool));
+		out.write((char*)&x1, sizeof(int));
+		out.write((char*)&y1, sizeof(int));
+		out.write((char*)&x2, sizeof(int));
+		out.write((char*)&y2, sizeof(int));
+	}
+	out.close();
+}
+
+void MyGraph::clearArc(int dx1, int dy1, int dx2, int dy2)
+{
+	std::ifstream in(filename);
+	int pos = -1;
+	if (in.is_open())
+	{
+		while (!in.eof()) {
+			bool correct = false;
+			int x1 = -1, y1 = -1, x2 = -1, y2 = -1;
+			in.read((char*)&correct, sizeof(correct));
+			in.read((char*)&x1, sizeof(x1));
+			in.read((char*)&y1, sizeof(y1));
+			in.read((char*)&x2, sizeof(x2));
+			in.read((char*)&y2, sizeof(y1));
+			if (correct && x1 == dx1 && x2 == dx2 && y1 == dy1 && y2 == dy2) { pos = (int)(in.tellg()) - (4 * sizeof(int) + sizeof(bool)); break; }
+		}
+		in.close();
+	}
+	if (pos == -1)return;
+	std::ofstream out(filename, std::ios::binary | std::ios::in | std::ios::out);
+	if (out.is_open())
+	{
+		bool fls = false;
+		out.seekp(pos, std::ios::beg);
+		out.write((char*)&fls, sizeof(bool));
+		out.close();
+	}
 }
 
 MyList<MyNodesList>* MyGraph::StronglyConnected()

@@ -51,8 +51,6 @@ public:
 	void addIncident(MyGraphNode* toAdd);
 	//функция разрывает исходящую связь из данного узла в узел toRemove
 	void removeIncident(MyGraphNode* toRemove);
-	//Функция разрывает вся входящие и исходящие связи
-	void clearArcs();
 	//Оператор сравнения. Если у вершин одинаковые координаты, то true
 	bool operator==(MyGraphNode b);
 	//служебные функции, к которым лучше не иметь доступ извне
@@ -76,25 +74,33 @@ template<class T> struct MyList
 class MyGraph
 {
 public:
+	//конструктор. создает граф из файла. Если файла не существует, он создается.
+	MyGraph(const char* filepath);
 	//деструктор, полностью освобождает занятую графом память
 	~MyGraph();
 	//функция добавляет в граф вершину с координатами x и y. Если координаты уже заняты, то вернет COORDS_BUSY, иначе NO_ERROR
-	MyGraphErrors addNode(int x, int y);
+	MyGraphErrors addNode(int x, int y, bool WF = false);
 	//функция удаляет из графа вершину с координатами x и y. Если координаты не заняты, то вернет COORDS_NOT_FOUNDED, иначе NO_ERROR
-	MyGraphErrors removeNode(int x, int y);
+	MyGraphErrors removeNode(int x, int y, bool WF = false);
 	//Функция добавляет дугу из вершины с координатами (x1,y1) в вершину с коодинатами с (x2,y2). Если хотя бы оди из координат некорректны то веренёт COORDS_NOT_FOUNDED, иначе NO_ERROR
-	MyGraphErrors addArc(int x1, int y1, int x2, int y2);
+	MyGraphErrors addArc(int x1, int y1, int x2, int y2, bool WF = false);
 	//Функция удаляет дугу из вершины с координатами (x1,y1) в вершину с коодинатами с (x2,y2). Если хотя бы оди из координат некорректны то веренёт COORDS_NOT_FOUNDED, иначе NO_ERROR
-	MyGraphErrors removeArc(int x1, int y1, int x2, int y2);
+	MyGraphErrors removeArc(int x1, int y1, int x2, int y2, bool WF = false);
 	//Выводит граф в консоль в виде матрицы смежности
 	void printToConsole();
 	//Возвращает указатель на список указателей на вершины из сильносвязных компонентов исходного графа. Алгоритм вроде бы полностью рабочий) Единственный минус: из вершин, невошедших ни в одну компоненту связности, создает отдельные списки из одного элемента
 	MyList<MyNodesList>* StronglyConnected();
 private:
+	const char* filename;
 	//счетчик, используемы при подсчете времени выхода из вершины графа.
 	int timer = 0;
 	//список всех вершин графа
 	MyNodesList* nodes = nullptr;
+
+
+	//Функция разрывает вся входящие и исходящие связи
+	void clearArcs(MyGraphNode* node, bool WF = false);
+
 	//Очищает порядок от прошлого обхода в глубину
 	void cleanN();
 	//обход в глубину по прямому графу. По завершении обхода в вершинах будет время выхода
@@ -103,8 +109,14 @@ private:
 	void DFBr(MyGraphNode* node);
 	//обход в глубину по инвертированному графу. По завершении обхода в графе будут пометки о том, что вершины уже пройдены, пройденные вершины будут добавленны в переданный граф
 	void iDFB(MyGraphNode* node, MyNodesList* graph);
-	//возвращает список вершин графа, отсортированный по возрастанию времени выхода
-	MyNodesList* sort(MyNodesList* );
+	//возвращает список вершин, отсортированный по возрастанию времени выхода
+	MyNodesList* sort(MyNodesList*);
+	//записывает в конец файла новую дугу
+	void wrirteArc(int x1, int y1, int x2, int y2);
+
+	//помечает дугу как удаленную
+	void clearArc(int x1, int y1, int x2, int y2);
+
 };
 
 #endif
