@@ -1,5 +1,6 @@
 ﻿#include <iostream>
 #include <conio.h>
+#include <ctime>
 #include <fstream>
 #include "MyGraph.h"
 using namespace std;
@@ -17,22 +18,63 @@ template <typename T> void safeGet(T& variable)
 	}
 }
 
+void randomGraph(MyGraph* gr, int N, int NN)
+{
+	int max = (int)floor(sqrt(N + 1));
+	for (int i = 1; i <= max; i++)
+	{
+		for (int j = 1; j <= max; j++)
+			gr->addNode(i, j, true);
+	}
+	//int amx = rand() % ((N) * (N - 1));
+	for (int i = 0; i < NN; i++)
+	{
+		gr->randomArc(true);
+	}
+}
+
 int main()
 {
+	srand(time(0));
 	system("color 1E");
-	system("mode con cols=160 lines=30");
+	system("mode con cols=160 lines=40");
+	//remove("graph.bin");
+	remove("log.txt");
 	MyGraph graph("graph.bin");
+	//cout << "Generating random graph" << endl;
+	//randomGraph(&graph, 20000,1000);
 	MyList<MyNodesList>* scc = nullptr;
 	while (1)
 	{
 		MyGraphErrors status = MG_NO_ERROR;
 		system("cls");
-		cout << "a - add new node, c - add new arc (connect nodes), r - remove node, d - remove arc (disconnect), s - find strongly conncted components" << endl;
-		graph.printToConsole();
+		cout << "a - add new node, c - add new arc (connect nodes), r - remove node, d - remove arc (disconnect), s - find strongly conncted components, p - print graph to log.txt, P - print to consol and log.txt" << endl;
+		if (graph.getNodesCount() < 20) 
+		{
+			graph.printToConsole(true);
+			cout << "a - add new node, c - add new arc (connect nodes), r - remove node, d - remove arc (disconnect), s - find strongly conncted components, p - print graph to log.txt, P - print to consol and log.txt" << endl;
+		}
+		cout << "Nodes: " << graph.getNodesCount() << ". Arcs: " << graph.getArcsCount() << endl;
 		char key = _getch();
 		switch (key)
 		{
 		case 27: goto end;
+
+		case 'p':
+		{
+			cout << "printing" << endl;
+			graph.printToConsole();
+			cout << "printing finished" << endl;
+		}
+		break;	
+		case 'P':
+		{
+			system("cls");
+			cout << "printing" << endl;
+			graph.printToConsole(true);
+			cout << "printing finished" << endl;
+		}
+		break;
 		case 'a':
 		{
 			cout << "Type x and y:" << endl;
@@ -81,7 +123,9 @@ int main()
 				delete scctmp;
 				scctmp = scctmp2;
 			}
+			double time = clock();
 			scc = graph.StronglyConnected();
+			time = clock() - time;
 			scctmp = scc;
 			cout << "Strongly conected component" << endl;
 			while (scctmp)
@@ -89,6 +133,8 @@ int main()
 				scctmp->info->print();
 				scctmp = scctmp->next;
 			}
+			cout << "seach time: " << time / 1000 << endl;
+			cout << "For timing: " << graph.getNodesCount() << ';' << graph.getArcsCount() << ';' << time / 1000 << endl;
 		}
 		break;
 		}
@@ -108,6 +154,6 @@ int main()
 		_getch();
 	}
 end:
-
+	graph.GC();
 	return 0;
 }

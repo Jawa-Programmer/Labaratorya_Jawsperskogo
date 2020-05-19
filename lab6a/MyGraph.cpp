@@ -29,14 +29,19 @@ void MyNodesList::clean()
 
 void MyNodesList::print()
 {
+	std::ofstream outLog("log.txt", std::ios::app);
 	MyNodesList* tmp = this;
 	std::cout << "{";
+	outLog << "{";
 	while (tmp)
 	{
 		std::cout << "(" << tmp->info->x << "," << tmp->info->y << "), ";
+		outLog << "(" << tmp->info->x << "," << tmp->info->y << "), ";
 		tmp = tmp->next;
 	}
 	std::cout << "}\n";
+	outLog << "}\n";
+	outLog.close();
 }
 
 MyGraphNode* MyNodesList::find(int x, int y)
@@ -95,23 +100,28 @@ MyGraphNode::~MyGraphNode()
 	//	clearArcs();
 }
 
-void MyGraphNode::addIncident(MyGraphNode* toAdd)
+MyGraphErrors MyGraphNode::addIncident(MyGraphNode* toAdd)
 {
-	if (incidents->find(toAdd->x, toAdd->y))return;
+	if (incidents->find(toAdd->x, toAdd->y))return MG_ALREADY_INCIDENT;
 	MyNodesList* tmp = new MyNodesList;
 	tmp->info = toAdd;
 	tmp->next = incidents;
 	incidents = tmp;
 	toAdd->addIncoming(this);
+	return MG_NO_ERROR;
 }
 
-void MyGraphNode::removeIncident(MyGraphNode* toRemove)
+MyGraphErrors MyGraphNode::removeIncident(MyGraphNode* toRemove)
 {
-
 	if (incidents)
-		if (incidents->info == toRemove) { MyNodesList* tmp = incidents; incidents = incidents->next; delete tmp; }
-		else incidents->remove(toRemove);
-	toRemove->removeIncoming(this);
+		if (incidents->info == toRemove) {
+			MyNodesList* tmp = incidents; incidents = incidents->next; delete tmp;
+			toRemove->removeIncoming(this); return MG_NO_ERROR;
+		}
+		else {
+			toRemove->removeIncoming(this); return incidents->remove(toRemove);
+		}
+	return MG_COORDS_NOT_FOUNDED;
 }
 
 void MyGraph::clearArcs(MyGraphNode* node, bool WF)
@@ -208,6 +218,7 @@ MyGraphErrors MyGraph::addNode(int x, int y, bool WF)
 		nodes->info->x = x;
 		nodes->info->y = y;
 	}
+	countNode++;
 	return MG_NO_ERROR;
 }
 
@@ -220,6 +231,7 @@ MyGraphErrors MyGraph::removeNode(int x, int y, bool WF)
 			clearArcs(nodes->info, WF);
 			delete nodes;
 			nodes = tmp;
+			countNode--;
 			return MG_NO_ERROR;
 		}
 		else
@@ -228,7 +240,9 @@ MyGraphErrors MyGraph::removeNode(int x, int y, bool WF)
 			if (toDel)
 			{
 				clearArcs(toDel, WF);
-				return nodes->remove(toDel);
+				MyGraphErrors st = nodes->remove(toDel);
+				if (st == MG_NO_ERROR) countNode--;
+				return st;
 			}
 		}
 	}
@@ -240,9 +254,12 @@ MyGraphErrors MyGraph::addArc(int x1, int y1, int x2, int y2, bool WF)
 	MyGraphNode* n1 = nodes->find(x1, y1);
 	MyGraphNode* n2 = nodes->find(x2, y2);
 	if (n1 && n2) {
-		n1->addIncident(n2);
-		if (WF)wrirteArc(x1, y1, x2, y2);
-		return MG_NO_ERROR;
+		MyGraphErrors st = n1->addIncident(n2);
+		if (st == MG_NO_ERROR) {
+			if (WF)wrirteArc(x1, y1, x2, y2);
+			countArc++;
+		}
+		return st;
 	}
 	return MG_COORDS_NOT_FOUNDED;
 }
@@ -252,49 +269,66 @@ MyGraphErrors MyGraph::removeArc(int x1, int y1, int x2, int y2, bool WF)
 	MyGraphNode* n1 = nodes->find(x1, y1);
 	MyGraphNode* n2 = nodes->find(x2, y2);
 	if (n1 && n2) {
-		n1->removeIncident(n2);
-		if (WF)clearArc(x1, y1, x2, y2);
-		return MG_NO_ERROR;
+		MyGraphErrors st = n1->removeIncident(n2);
+		if (st == MG_NO_ERROR) {
+			if (WF)clearArc(x1, y1, x2, y2);
+			countArc--;
+		}
+		return st;
 	}
 	return MG_COORDS_NOT_FOUNDED;
 }
 
-void MyGraph::printToConsole()
+void MyGraph::printToConsole(bool toConsol)
 {
+	std::ofstream outLog("log.txt", std::ios::app);
+	outLog << "---------------------------------------------------\n";
+	MyNodesList* tmp = nodes;
+	while (tmp)
 	{
-		MyNodesList* tmp = nodes;
-		while (tmp)
+		if (toConsol)std::cout << "\t" << tmp->info->x;
+		outLog << "\t\t" << tmp->info->x;
+		tmp = tmp->next;
+	}
+	if (toConsol)std::cout << "\n";
+	outLog << "\n";
+	tmp = nodes;
+	while (tmp)
+	{
+		if (toConsol)std::cout << "\t" << tmp->info->y;
+		outLog << "\t\t" << tmp->info->y;
+		tmp = tmp->next;
+	}
+	if (toConsol)std::cout << "\n";
+	outLog << "\n";
+	tmp = nodes;
+	while (tmp)
+	{
+		if (toConsol)	std::cout << tmp->info->x << " " << tmp->info->y;
+		outLog << tmp->info->x << " " << tmp->info->y;
 		{
-			std::cout << "\t" << tmp->info->x;
-			tmp = tmp->next;
-		}
-		std::cout << "\n";
-		tmp = nodes;
-		while (tmp)
-		{
-			std::cout << "\t" << tmp->info->y;
-			tmp = tmp->next;
-		}
-		std::cout << "\n";
-		tmp = nodes;
-		while (tmp)
-		{
-			std::cout << tmp->info->x << " " << tmp->info->y;
+			MyNodesList* tmp2 = nodes;
+			while (tmp2)
 			{
-				MyNodesList* tmp2 = nodes;
-				while (tmp2)
-				{
-					if (tmp->info->incoming->find(tmp2->info->x, tmp2->info->y))std::cout << "\t+";
-					else std::cout << "\t-";
-					tmp2 = tmp2->next;
+				if (tmp->info->incoming->find(tmp2->info->x, tmp2->info->y)) {
+					if (toConsol)	std::cout << "\t+";
+					outLog << "\t\t+";
 				}
+				else {
+					if (toConsol)	std::cout << "\t-";
+					outLog << "\t\t-";
+				}
+				tmp2 = tmp2->next;
 			}
-			std::cout << "\n";
-			tmp = tmp->next;
 		}
+		if (toConsol)	std::cout << "\n";
+		outLog << "\n";
+		tmp = tmp->next;
 	}
 
+	outLog.close();
 }
+
 
 void MyGraph::cleanN()
 {
@@ -455,4 +489,48 @@ MyList<MyNodesList>* MyGraph::StronglyConnected()
 	sorted->clean();
 	delete sorted;
 	return unsHead;
+}
+
+void MyGraph::GC()
+{
+	std::ifstream in(filename);
+	std::ofstream out("tmp.bin");
+	if (in.is_open() && out.is_open())
+	{
+		while (!in.eof())
+		{
+			bool correct = false;
+			int x1 = -1, y1 = -1, x2 = -1, y2 = -1;
+			in.read((char*)&correct, sizeof(correct));
+			in.read((char*)&x1, sizeof(x1));
+			in.read((char*)&y1, sizeof(y1));
+			in.read((char*)&x2, sizeof(x2));
+			in.read((char*)&y2, sizeof(y1));
+			if (correct)
+			{
+				out.write((char*)&correct, sizeof(bool));
+				out.write((char*)&x1, sizeof(int));
+				out.write((char*)&y1, sizeof(int));
+				out.write((char*)&x2, sizeof(int));
+				out.write((char*)&y2, sizeof(int));
+			}
+		}
+	}
+	in.close();
+	out.close();
+	remove(filename);
+	rename("tmp.bin", filename);
+}
+
+void MyGraph::randomArc(bool WF)
+{
+	int mx = countNode;
+	int a1, a2;
+	a1 = rand() % mx + 1;
+	while ((a2 = rand() % mx + 1) == a1);
+	MyNodesList* n1 = nodes, * n2 = nodes;
+	for (int i = 0; i < a1 && n1; i++) { n1 = n1->next; }
+	for (int i = 0; i < a2 && n2; i++) { n2 = n2->next; }
+	if (n1 && n2)
+		addArc(n1->info->x, n1->info->y, n2->info->x, n2->info->y, WF);
 }

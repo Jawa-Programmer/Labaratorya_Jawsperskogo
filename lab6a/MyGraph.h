@@ -2,7 +2,7 @@
 #define MY_GRAPH_H
 
 
-enum MyGraphErrors { MG_NO_ERROR, MG_COORDS_BUSY, MG_COORDS_NOT_FOUNDED };
+enum MyGraphErrors { MG_NO_ERROR, MG_COORDS_BUSY, MG_COORDS_NOT_FOUNDED, MG_ALREADY_INCIDENT };
 
 struct MyGraphNode;
 struct MyNodesList;
@@ -48,9 +48,9 @@ public:
 	//входящие дуги
 	MyNodesList* incoming = nullptr;
 	//функция добавляет новую исходящую связь из данного узла в узел toAdd
-	void addIncident(MyGraphNode* toAdd);
+	MyGraphErrors addIncident(MyGraphNode* toAdd);
 	//функция разрывает исходящую связь из данного узла в узел toRemove
-	void removeIncident(MyGraphNode* toRemove);
+	MyGraphErrors removeIncident(MyGraphNode* toRemove);
 	//Оператор сравнения. Если у вершин одинаковые координаты, то true
 	bool operator==(MyGraphNode b);
 	//служебные функции, к которым лучше не иметь доступ извне
@@ -78,26 +78,32 @@ public:
 	MyGraph(const char* filepath);
 	//деструктор, полностью освобождает занятую графом память
 	~MyGraph();
-	//функция добавляет в граф вершину с координатами x и y. Если координаты уже заняты, то вернет COORDS_BUSY, иначе NO_ERROR
+	//метод добавляет в граф вершину с координатами x и y. Если координаты уже заняты, то вернет COORDS_BUSY, иначе NO_ERROR
 	MyGraphErrors addNode(int x, int y, bool WF = false);
-	//функция удаляет из графа вершину с координатами x и y. Если координаты не заняты, то вернет COORDS_NOT_FOUNDED, иначе NO_ERROR
+	//метод удаляет из графа вершину с координатами x и y. Если координаты не заняты, то вернет COORDS_NOT_FOUNDED, иначе NO_ERROR
 	MyGraphErrors removeNode(int x, int y, bool WF = false);
-	//Функция добавляет дугу из вершины с координатами (x1,y1) в вершину с коодинатами с (x2,y2). Если хотя бы оди из координат некорректны то веренёт COORDS_NOT_FOUNDED, иначе NO_ERROR
+	//метод добавляет дугу из вершины с координатами (x1,y1) в вершину с коодинатами с (x2,y2). Если хотя бы оди из координат некорректны то веренёт COORDS_NOT_FOUNDED, иначе NO_ERROR
 	MyGraphErrors addArc(int x1, int y1, int x2, int y2, bool WF = false);
-	//Функция удаляет дугу из вершины с координатами (x1,y1) в вершину с коодинатами с (x2,y2). Если хотя бы оди из координат некорректны то веренёт COORDS_NOT_FOUNDED, иначе NO_ERROR
+	//метод удаляет дугу из вершины с координатами (x1,y1) в вершину с коодинатами с (x2,y2). Если хотя бы оди из координат некорректны то веренёт COORDS_NOT_FOUNDED, иначе NO_ERROR
 	MyGraphErrors removeArc(int x1, int y1, int x2, int y2, bool WF = false);
-	//Выводит граф в консоль в виде матрицы смежности
-	void printToConsole();
-	//Возвращает указатель на список указателей на вершины из сильносвязных компонентов исходного графа. Алгоритм вроде бы полностью рабочий) Единственный минус: из вершин, невошедших ни в одну компоненту связности, создает отдельные списки из одного элемента
+	//процедура выводит граф в виде матрицы смежности в файл log.txt и, по желанию, в консоль
+	void printToConsole(bool toConsol = false);
+	//метод возвращает указатель на список указателей на вершины из сильносвязных компонентов исходного графа. Алгоритм вроде бы полностью рабочий) Единственный минус: из вершин, невошедших ни в одну компоненту связности, создает отдельные списки из одного элемента
 	MyList<MyNodesList>* StronglyConnected();
+	//данная процедура производит сборку мусора в файле графа (удаляет записи, которые помечены недействительными, освобождая тем память)
+	void GC();
+	//процедура генерирует случаную дугу между двумя (может случится и так, что новая дуга не появится вовсе)
+	void randomArc(bool WF = false);
+	inline int getArcsCount() { return countArc; }
+	inline int getNodesCount() { return countNode; }
 private:
 	const char* filename;
 	//счетчик, используемы при подсчете времени выхода из вершины графа.
 	int timer = 0;
 	//список всех вершин графа
 	MyNodesList* nodes = nullptr;
-
-
+	int countNode = 0;
+	int countArc = 0;
 	//Функция разрывает вся входящие и исходящие связи
 	void clearArcs(MyGraphNode* node, bool WF = false);
 
