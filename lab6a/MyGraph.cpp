@@ -348,36 +348,75 @@ void MyGraph::DFB()
 	MyNodesList* tmp = nodes;
 	while (tmp)
 	{
-		if (tmp->info->N == -1)DFBr(tmp->info);
+		//DFBr(tmp->info);
+		if (tmp->info->N == -1) {
+			MyNodesStack* stack = new MyNodesStack{ tmp->info, nullptr, nullptr };
+			tmp->info->forvis = true;
+			while (stack)
+			{
+				stack->incident = stack->incident ? stack->incident->next : stack->node->incoming;
+				if (stack->incident)
+				{
+					if (!stack->incident->info->forvis) {
+						timer++;
+						MyNodesStack* mst = new MyNodesStack{ stack->incident->info,nullptr, stack };
+						stack = mst;
+						stack->node->forvis = true;
+					}
+				}
+				else {
+					stack->node->N = timer;
+					timer++;
+					MyNodesStack* mst = stack->next;
+					delete stack;
+					stack = mst;
+				}
+			}
+		}
 		tmp = tmp->next;
 	}
 }
 
-void MyGraph::DFBr(MyGraphNode* node)
+MyList<MyNodesList>* MyGraph::iDFB(MyNodesList* sorted)
 {
-	timer++;
-	node->forvis = true;
-	MyNodesList* tmp = node->incoming;
+	MyList<MyNodesList>* uns = nullptr, * unsHead = uns;
+	MyNodesList* tmp = sorted;
 	while (tmp)
 	{
-		if (!tmp->info->forvis)DFBr(tmp->info);
+		if (!tmp->info->Visited) {
+			if (!uns) { unsHead = new MyList<MyNodesList>(); uns = unsHead; }
+			else {
+				uns->next = new MyList<MyNodesList>();
+				uns = uns->next;
+			}
+			uns->info = new MyNodesList();
+			uns->info->info = tmp->info;
+			MyNodesStack* stack = new MyNodesStack{ tmp->info, nullptr, nullptr };
+			tmp->info->Visited = true;
+			while (stack)
+			{
+				stack->incident = stack->incident ? stack->incident->next : sort(stack->node->incidents);
+				if (stack->incident)
+				{
+					if (!stack->incident->info->Visited) {
+						MyNodesStack* mst = new MyNodesStack{ stack->incident->info,nullptr, stack };
+						stack = mst;
+						stack->node->Visited = true;
+						uns->info->add(stack->node);
+					}
+				}
+				else {
+					MyNodesStack* mst = stack->next;
+					delete stack;
+					stack = mst;
+				}
+			}
+		}
 		tmp = tmp->next;
 	}
-	node->N = timer;
-	timer++;
+	return unsHead;
 }
 
-void MyGraph::iDFB(MyGraphNode* node, MyNodesList* graph)
-{
-	node->Visited = true;
-	graph->add(node);
-	MyNodesList* tmp = sort(node->incidents);
-	while (tmp)
-	{
-		if (!tmp->info->Visited)iDFB(tmp->info, graph);
-		tmp = tmp->next;
-	}
-}
 
 MyNodesList* MyGraph::sort(MyNodesList* mndl)
 {
@@ -463,32 +502,12 @@ MyList<MyNodesList>* MyGraph::StronglyConnected()
 {
 	cleanN();
 	DFB();
-	MyNodesList* sorted = sort(nodes), * tmp = sorted;
-	MyList<MyNodesList>* uns = nullptr, * unsHead = nullptr;
-	while (tmp)
-	{
-		if (!tmp->info->Visited) {
-			MyNodesList* pr = new MyNodesList;
-			pr->info = tmp->info;
-			iDFB(tmp->info, pr);
-
-			if (uns) {
-				uns->next = new MyList<MyNodesList>;
-				uns = uns->next;
-				uns->info = pr;
-			}
-			else
-			{
-				uns = new MyList<MyNodesList>;
-				uns->info = pr;
-				unsHead = uns;
-			}
-		}
-		tmp = tmp->next;
-	}
+	MyNodesList* sorted = sort(nodes);
+	MyList<MyNodesList>* uns =
+		iDFB(sorted);
 	sorted->clean();
 	delete sorted;
-	return unsHead;
+	return uns;
 }
 
 void MyGraph::GC()

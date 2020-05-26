@@ -38,11 +38,11 @@ int main()
 	srand(time(0));
 	system("color 1E");
 	system("mode con cols=160 lines=40");
-	//remove("graph.bin");
+	remove("graph.bin");
 	remove("log.txt");
 	MyGraph graph("graph.bin");
-	//cout << "Generating random graph" << endl;
-	//randomGraph(&graph, 20000,1000);
+	cout << "Generating random graph" << endl;
+	randomGraph(&graph, 1000000,10000000);
 	MyList<MyNodesList>* scc = nullptr;
 	while (1)
 	{

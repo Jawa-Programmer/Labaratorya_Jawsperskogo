@@ -6,6 +6,7 @@ enum MyGraphErrors { MG_NO_ERROR, MG_COORDS_BUSY, MG_COORDS_NOT_FOUNDED, MG_ALRE
 
 struct MyGraphNode;
 struct MyNodesList;
+struct MyNodesStack;
 template<class T> struct MyList;
 class MyGraph;
 
@@ -29,6 +30,14 @@ struct MyNodesList
 	//удаление элемента вершины графа из списка
 	MyGraphErrors remove(MyGraphNode* toDel);
 };
+
+//стурктура хранит пару (вершина, список смежности). Програмная реализация стека позволяет избежать рекурсивного вызова функции поиска в глубину.
+struct MyNodesStack {
+	MyGraphNode* node;
+	MyNodesList* incident;
+	MyNodesStack* next;
+};
+
 //структура узла графа. Содержит ключ, список входящих и исходящих дуг
 struct MyGraphNode
 {
@@ -109,12 +118,10 @@ private:
 
 	//Очищает порядок от прошлого обхода в глубину
 	void cleanN();
-	//обход в глубину по прямому графу. По завершении обхода в вершинах будет время выхода
+	//обход в глубину по инвертированному графу. По завершении обхода в вершинах будет время выхода
 	void DFB();
-	//рекурсивная функция обхода. Служебная, вызывается из DFB.
-	void DFBr(MyGraphNode* node);
-	//обход в глубину по инвертированному графу. По завершении обхода в графе будут пометки о том, что вершины уже пройдены, пройденные вершины будут добавленны в переданный граф
-	void iDFB(MyGraphNode* node, MyNodesList* graph);
+	//обход в глубину по прямому графу. Если в него передать отсортированный по времени обратного обхода список вершин, то возвращаемое множество - список списков сильной связности.
+	MyList<MyNodesList>* iDFB(MyNodesList* sorted);
 	//возвращает список вершин, отсортированный по возрастанию времени выхода
 	MyNodesList* sort(MyNodesList*);
 	//записывает в конец файла новую дугу
